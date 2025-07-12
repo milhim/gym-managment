@@ -1,5 +1,3 @@
-const Payment = require('../entities/Payment');
-
 class MembershipService {
     constructor(memberRepository) {
         this.memberRepository = memberRepository;
@@ -74,12 +72,12 @@ class MembershipService {
     }
 
     createPayment(paymentData) {
-        return new Payment({
+        return {
             amount: paymentData.amount,
             date: paymentData.date || new Date(),
-            method: paymentData.method,
+            method: paymentData.method || 'cash',
             notes: paymentData.notes || ''
-        });
+        };
     }
 }
 
