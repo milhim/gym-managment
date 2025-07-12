@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-// Simplified member schema for easy creation
+// Simplified member schema with only the 4 required fields
 const memberSchema = Joi.object({
     name: Joi.string().required().trim().min(2).max(100).messages({
         'string.empty': 'Name is required',
@@ -13,17 +13,14 @@ const memberSchema = Joi.object({
         'string.min': 'Phone number must be at least 8 characters',
         'string.max': 'Phone number must not exceed 20 characters'
     }),
-    joinDate: Joi.date().optional().default(() => new Date()).messages({
-        'date.base': 'Join date must be a valid date'
+    joinDate: Joi.date().required().messages({
+        'date.base': 'Join date must be a valid date',
+        'any.required': 'Join date is required'
     }),
     paidAmount: Joi.number().required().min(0).messages({
         'number.base': 'Paid amount must be a number',
         'number.min': 'Paid amount cannot be negative',
         'any.required': 'Paid amount is required'
-    }),
-    totalMembership: Joi.number().optional().min(0).default(100000).messages({
-        'number.base': 'Total membership must be a number',
-        'number.min': 'Total membership cannot be negative'
     })
 });
 
@@ -55,8 +52,7 @@ const updateMemberSchema = Joi.object({
     name: Joi.string().optional().trim().min(2).max(100),
     phoneNumber: Joi.string().optional().trim().pattern(/^[\d\s\-\+\(\)]+$/).min(8).max(20),
     joinDate: Joi.date().optional(),
-    paidAmount: Joi.number().optional().min(0),
-    totalMembership: Joi.number().optional().min(0)
+    paidAmount: Joi.number().optional().min(0)
 });
 
 const paymentSchema = Joi.object({

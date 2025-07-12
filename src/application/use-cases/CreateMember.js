@@ -14,9 +14,9 @@ class CreateMember {
         const member = new Member({
             name: memberData.name.trim(),
             phoneNumber: memberData.phoneNumber.trim(),
-            joinDate: memberData.joinDate ? new Date(memberData.joinDate) : new Date(),
-            paidAmount: memberData.paidAmount || 0,
-            totalMembership: memberData.totalMembership || 100000,
+            joinDate: new Date(memberData.joinDate),
+            paidAmount: memberData.paidAmount,
+            totalMembership: 100000, // Default value since it's not provided in the simple schema
             lastPaymentDate: memberData.paidAmount > 0 ? new Date() : null
         });
 
