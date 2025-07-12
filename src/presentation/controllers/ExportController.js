@@ -1,15 +1,15 @@
 const ExcelJS = require('exceljs');
 
 class ExportController {
-    constructor(getMember, getStatistics) {
-        this.getMember = getMember;
+    constructor(getMembers, getStatistics) {
+        this.getMembers = getMembers;
         this.getStatistics = getStatistics;
     }
 
     async exportMembers(req, res) {
         try {
             // Get all members without pagination
-            const result = await this.getMember.execute({}, 1, 1000);
+            const result = await this.getMembers.execute({}, 1, 1000);
             const members = result.members;
 
             // Get statistics

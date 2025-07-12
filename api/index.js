@@ -29,6 +29,7 @@ app.use((req, res, next) => {
 
 // Database connection state
 let isConnected = false;
+let routesSetup = false;
 
 // Connect to database
 async function connectToDatabase() {
@@ -45,7 +46,7 @@ async function connectToDatabase() {
     }
 }
 
-// Health check endpoint
+// Health check endpoint (always available)
 app.get('/api/v1/health', (req, res) => {
     res.json({
         success: true,
@@ -70,13 +71,13 @@ app.get('/', (req, res) => {
     });
 });
 
-// Setup API routes directly (simplified for serverless)
-let routesSetup = false;
-
+// Setup API routes
 async function setupApiRoutes() {
     if (!routesSetup) {
         try {
-            // Import dependencies directly
+            console.log('Setting up API routes...');
+
+            // Import dependencies
             const MongoMemberRepository = require('../src/infrastructure/repositories/MongoMemberRepository');
             const MembershipService = require('../src/domain/services/MembershipService');
 
@@ -127,16 +128,16 @@ async function setupApiRoutes() {
             );
             const exportController = new ExportController(getMembers, getStatistics);
 
-            // API Routes
-            const router = express.Router();
+            // Create API router
+            const apiRouter = express.Router();
 
             // Statistics endpoint
-            router.get('/statistics', (req, res) => {
+            apiRouter.get('/statistics', (req, res) => {
                 memberController.getStatistics(req, res);
             });
 
             // Export endpoints
-            router.get('/export/members', (req, res) => {
+            apiRouter.get('/export/members', (req, res) => {
                 exportController.exportMembers(req, res);
             });
 
@@ -206,9 +207,11 @@ async function setupApiRoutes() {
                 }
             );
 
-            // Mount routes
-            router.use('/members', memberRouter);
-            app.use('/api/v1', router);
+            // Mount member routes
+            apiRouter.use('/members', memberRouter);
+
+            // Mount API routes
+            app.use('/api/v1', apiRouter);
 
             routesSetup = true;
             console.log('API routes loaded successfully');
@@ -259,7 +262,7 @@ app.use((error, req, res, next) => {
     });
 });
 
-// 404 handler
+// 404 handler - MUST be after all routes
 app.use('*', (req, res) => {
     res.status(404).json({
         success: false,
@@ -268,16 +271,32 @@ app.use('*', (req, res) => {
     });
 });
 
+// Initialize routes on startup
+let initializationPromise = null;
+
+async function initialize() {
+    if (!initializationPromise) {
+        initializationPromise = (async () => {
+            try {
+                await connectToDatabase();
+                await setupApiRoutes();
+                console.log('API initialization completed successfully');
+            } catch (error) {
+                console.error('API initialization failed:', error);
+                throw error;
+            }
+        })();
+    }
+    return initializationPromise;
+}
+
 // Serverless function handler
 module.exports = async (req, res) => {
     try {
         console.log('Serverless function invoked:', req.method, req.url);
 
-        // Connect to database
-        await connectToDatabase();
-
-        // Setup API routes if not already done
-        await setupApiRoutes();
+        // Initialize database and routes
+        await initialize();
 
         // Handle the request
         return app(req, res);

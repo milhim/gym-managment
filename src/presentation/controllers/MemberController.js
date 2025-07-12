@@ -1,10 +1,10 @@
 const { MemberDto } = require('../../application/dto/MemberDto');
 
 class MemberController {
-    constructor(createMember, updateMember, getMember, addPayment, deleteMember, getStatistics) {
+    constructor(createMember, updateMember, getMembers, addPayment, deleteMember, getStatistics) {
         this.createMember = createMember;
         this.updateMember = updateMember;
-        this.getMember = getMember;
+        this.getMembers = getMembers;
         this.addPayment = addPayment;
         this.deleteMember = deleteMember;
         this.getStatistics = getStatistics;
@@ -46,7 +46,7 @@ class MemberController {
             if (joinDateFrom) filters.joinDateFrom = joinDateFrom;
             if (joinDateTo) filters.joinDateTo = joinDateTo;
 
-            const result = await this.getMember.execute(filters, page, limit);
+            const result = await this.getMembers.execute(filters, page, limit);
 
             res.json({
                 success: true,
@@ -66,7 +66,7 @@ class MemberController {
     async getById(req, res) {
         try {
             const { id } = req.params;
-            const member = await this.getMember.getById(id);
+            const member = await this.getMembers.getById(id);
 
             res.json({
                 success: true,
