@@ -52,7 +52,9 @@ app.get('/api/v1/health', (req, res) => {
         success: true,
         message: 'API is healthy',
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        routesSetup: routesSetup,
+        dbConnected: isConnected
     });
 });
 
@@ -78,10 +80,12 @@ async function setupApiRoutes() {
             console.log('Setting up API routes...');
 
             // Import dependencies
+            console.log('Importing dependencies...');
             const MongoMemberRepository = require('../src/infrastructure/repositories/MongoMemberRepository');
             const MembershipService = require('../src/domain/services/MembershipService');
 
             // Use Cases
+            console.log('Importing use cases...');
             const CreateMember = require('../src/application/use-cases/CreateMember');
             const UpdateMember = require('../src/application/use-cases/UpdateMember');
             const GetMembers = require('../src/application/use-cases/GetMembers');
@@ -90,10 +94,12 @@ async function setupApiRoutes() {
             const GetStatistics = require('../src/application/use-cases/GetStatistics');
 
             // Controllers
+            console.log('Importing controllers...');
             const MemberController = require('../src/presentation/controllers/MemberController');
             const ExportController = require('../src/presentation/controllers/ExportController');
 
             // Validation middleware
+            console.log('Importing validation middleware...');
             const {
                 memberSchema,
                 updateMemberSchema,
@@ -106,10 +112,12 @@ async function setupApiRoutes() {
             } = require('../src/presentation/middleware/validation');
 
             // Initialize dependencies
+            console.log('Initializing dependencies...');
             const memberRepository = new MongoMemberRepository();
             const membershipService = new MembershipService(memberRepository);
 
             // Initialize use cases
+            console.log('Initializing use cases...');
             const createMember = new CreateMember(memberRepository, membershipService);
             const updateMember = new UpdateMember(memberRepository, membershipService);
             const getMembers = new GetMembers(memberRepository);
@@ -118,6 +126,7 @@ async function setupApiRoutes() {
             const getStatistics = new GetStatistics(memberRepository, membershipService);
 
             // Initialize controllers
+            console.log('Initializing controllers...');
             const memberController = new MemberController(
                 createMember,
                 updateMember,
@@ -129,63 +138,88 @@ async function setupApiRoutes() {
             const exportController = new ExportController(getMembers, getStatistics);
 
             // Create API router
+            console.log('Creating API router...');
             const apiRouter = express.Router();
 
             // Statistics endpoint
+            console.log('Setting up statistics endpoint...');
             apiRouter.get('/statistics', (req, res) => {
+                console.log('Statistics endpoint called');
                 memberController.getStatistics(req, res);
             });
 
             // Export endpoints
+            console.log('Setting up export endpoints...');
             apiRouter.get('/export/members', (req, res) => {
+                console.log('Export members endpoint called');
                 exportController.exportMembers(req, res);
             });
 
             // Member routes
+            console.log('Setting up member routes...');
             const memberRouter = express.Router();
 
             // Get all members with pagination and filtering
             memberRouter.get('/',
                 validateQuery(querySchema),
-                (req, res) => memberController.getAll(req, res)
+                (req, res) => {
+                    console.log('Get all members endpoint called');
+                    memberController.getAll(req, res);
+                }
             );
 
             // Get member by ID
             memberRouter.get('/:id',
                 validateParams(paramsSchema),
-                (req, res) => memberController.getById(req, res)
+                (req, res) => {
+                    console.log('Get member by ID endpoint called');
+                    memberController.getById(req, res);
+                }
             );
 
             // Create new member
             memberRouter.post('/',
                 validateBody(memberSchema),
-                (req, res) => memberController.create(req, res)
+                (req, res) => {
+                    console.log('Create member endpoint called');
+                    memberController.create(req, res);
+                }
             );
 
             // Update member
             memberRouter.put('/:id',
                 validateParams(paramsSchema),
                 validateBody(updateMemberSchema),
-                (req, res) => memberController.update(req, res)
+                (req, res) => {
+                    console.log('Update member endpoint called');
+                    memberController.update(req, res);
+                }
             );
 
             // Delete member
             memberRouter.delete('/:id',
                 validateParams(paramsSchema),
-                (req, res) => memberController.delete(req, res)
+                (req, res) => {
+                    console.log('Delete member endpoint called');
+                    memberController.delete(req, res);
+                }
             );
 
             // Add payment to member
             memberRouter.post('/:id/payments',
                 validateParams(paramsSchema),
                 validateBody(paymentSchema),
-                (req, res) => memberController.addPayment(req, res)
+                (req, res) => {
+                    console.log('Add payment endpoint called');
+                    memberController.addPayment(req, res);
+                }
             );
 
             // Get payment history for member
             memberRouter.get('/:id/payments',
                 validateParams(paramsSchema),
                 async (req, res) => {
+                    console.log('Get payment history endpoint called');
                     try {
                         const member = await getMembers.getById(req.params.id);
                         res.json({
@@ -208,23 +242,40 @@ async function setupApiRoutes() {
             );
 
             // Mount member routes
+            console.log('Mounting member routes...');
             apiRouter.use('/members', memberRouter);
 
             // Mount API routes
+            console.log('Mounting API routes...');
             app.use('/api/v1', apiRouter);
 
             routesSetup = true;
             console.log('API routes loaded successfully');
         } catch (error) {
             console.error('Failed to load API routes:', error);
+            routesSetup = false;
             throw error;
         }
     }
 }
 
+// Test endpoint to verify routes are working
+app.get('/api/v1/test', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Test endpoint working',
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Global error handler
 app.use((error, req, res, next) => {
     console.error('Global error handler:', error);
+
+    // Don't send response if already sent
+    if (res.headersSent) {
+        return next(error);
+    }
 
     // Mongoose validation errors
     if (error.name === 'ValidationError') {
@@ -264,20 +315,23 @@ app.use((error, req, res, next) => {
 
 // 404 handler - MUST be after all routes
 app.use('*', (req, res) => {
+    console.log(`404 handler called for: ${req.method} ${req.originalUrl}`);
     res.status(404).json({
         success: false,
         error: 'Endpoint not found',
-        message: `Cannot ${req.method} ${req.originalUrl}`
+        message: `Cannot ${req.method} ${req.originalUrl}`,
+        routesSetup: routesSetup
     });
 });
 
-// Initialize routes on startup
+// Initialize routes immediately when module loads
 let initializationPromise = null;
 
 async function initialize() {
     if (!initializationPromise) {
         initializationPromise = (async () => {
             try {
+                console.log('Starting API initialization...');
                 await connectToDatabase();
                 await setupApiRoutes();
                 console.log('API initialization completed successfully');
@@ -310,7 +364,8 @@ module.exports = async (req, res) => {
                 return res.status(500).json({
                     success: false,
                     error: 'Internal server error',
-                    message: error.message
+                    message: error.message,
+                    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
                 });
             }
         } catch (responseError) {
