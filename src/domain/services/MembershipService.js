@@ -4,16 +4,16 @@ class MembershipService {
     }
 
     async validateMemberData(memberData) {
-        const { name, phoneNumber, paidAmount, totalMembership } = memberData;
+        const { name, phoneNumber, paidAmount } = memberData;
 
         // Validate name
-        if (!name || name.trim().length < 3) {
-            throw new Error('Name must be at least 3 characters long');
+        if (!name || name.trim().length < 2) {
+            throw new Error('Name must be at least 2 characters long');
         }
 
         // Validate phone number
-        if (!phoneNumber || phoneNumber.trim().length < 10) {
-            throw new Error('Phone number must be at least 10 digits');
+        if (!phoneNumber || phoneNumber.trim().length < 8) {
+            throw new Error('Phone number must be at least 8 characters');
         }
 
         // Check if phone already exists
@@ -22,20 +22,9 @@ class MembershipService {
             throw new Error('Member with this phone number already exists');
         }
 
-        // Validate amounts
-        const totalFee = totalMembership || 100000;
-        const paid = paidAmount || 0;
-
-        if (totalFee <= 0) {
-            throw new Error('Total membership fee must be greater than 0');
-        }
-
-        if (paid < 0) {
+        // Validate paid amount
+        if (paidAmount < 0) {
             throw new Error('Paid amount cannot be negative');
-        }
-
-        if (paid > totalFee) {
-            throw new Error('Paid amount cannot exceed total membership fee');
         }
 
         return true;

@@ -5,15 +5,7 @@ class MemberDto {
             name: member.name,
             phoneNumber: member.phoneNumber,
             joinDate: member.joinDate,
-            paidAmount: member.paidAmount,
-            totalMembership: member.totalMembership,
-            lastPaymentDate: member.lastPaymentDate,
-            remainingAmount: member.remainingAmount,
-            isFullyPaid: member.isFullyPaid,
-            paymentPercentage: member.paymentPercentage,
-            membershipStatus: member.membershipStatus,
-            createdAt: member.createdAt,
-            updatedAt: member.updatedAt
+            paidAmount: member.paidAmount
         };
     }
 
@@ -23,11 +15,7 @@ class MemberDto {
             name: dto.name,
             phoneNumber: dto.phoneNumber,
             joinDate: dto.joinDate,
-            paidAmount: dto.paidAmount,
-            totalMembership: dto.totalMembership,
-            lastPaymentDate: dto.lastPaymentDate,
-            createdAt: dto.createdAt,
-            updatedAt: dto.updatedAt
+            paidAmount: dto.paidAmount
         };
     }
 }

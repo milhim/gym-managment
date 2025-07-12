@@ -1,13 +1,11 @@
 const { MemberDto } = require('../../application/dto/MemberDto');
 
 class MemberController {
-    constructor(createMember, updateMember, getMembers, addPayment, deleteMember, getStatistics) {
+    constructor(createMember, updateMember, getMembers, deleteMember) {
         this.createMember = createMember;
         this.updateMember = updateMember;
         this.getMembers = getMembers;
-        this.addPayment = addPayment;
         this.deleteMember = deleteMember;
-        this.getStatistics = getStatistics;
     }
 
     async create(req, res) {
@@ -38,11 +36,10 @@ class MemberController {
 
     async getAll(req, res) {
         try {
-            const { page, limit, search, status, joinDateFrom, joinDateTo } = req.query;
+            const { page, limit, search, joinDateFrom, joinDateTo } = req.query;
 
             const filters = {};
             if (search) filters.search = search;
-            if (status) filters.status = status;
             if (joinDateFrom) filters.joinDateFrom = joinDateFrom;
             if (joinDateTo) filters.joinDateTo = joinDateTo;
 
@@ -145,52 +142,6 @@ class MemberController {
             res.status(500).json({
                 success: false,
                 error: 'Failed to delete member'
-            });
-        }
-    }
-
-    async addPayment(req, res) {
-        try {
-            const { id } = req.params;
-            const { amount } = req.body;
-            const member = await this.addPayment.execute(id, amount);
-
-            res.json({
-                success: true,
-                message: 'Payment added successfully',
-                data: MemberDto.fromDomain(member)
-            });
-        } catch (error) {
-            console.error('Add payment error:', error);
-
-            if (error.message === 'Member not found') {
-                return res.status(404).json({
-                    success: false,
-                    error: error.message
-                });
-            }
-
-            res.status(400).json({
-                success: false,
-                error: error.message
-            });
-        }
-    }
-
-    async getStatistics(req, res) {
-        try {
-            const statistics = await this.getStatistics.execute();
-
-            res.json({
-                success: true,
-                data: statistics
-            });
-        } catch (error) {
-            console.error('Get statistics error:', error);
-
-            res.status(500).json({
-                success: false,
-                error: 'Failed to retrieve statistics'
             });
         }
     }

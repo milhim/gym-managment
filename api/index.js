@@ -64,9 +64,7 @@ app.get('/', (req, res) => {
         version: '1.0.0',
         endpoints: {
             health: '/api/v1/health',
-            members: '/api/v1/members',
-            statistics: '/api/v1/statistics',
-            export: '/api/v1/export/members'
+            members: '/api/v1/members'
         }
     });
 });
@@ -94,21 +92,17 @@ try {
     const CreateMember = require('../src/application/use-cases/CreateMember');
     const UpdateMember = require('../src/application/use-cases/UpdateMember');
     const GetMembers = require('../src/application/use-cases/GetMembers');
-    const AddPayment = require('../src/application/use-cases/AddPayment');
     const DeleteMember = require('../src/application/use-cases/DeleteMember');
-    const GetStatistics = require('../src/application/use-cases/GetStatistics');
 
     // Controllers
     console.log('Importing controllers...');
     const MemberController = require('../src/presentation/controllers/MemberController');
-    const ExportController = require('../src/presentation/controllers/ExportController');
 
     // Validation middleware
     console.log('Importing validation middleware...');
     const {
         memberSchema,
         updateMemberSchema,
-        paymentSchema,
         querySchema,
         paramsSchema,
         validateBody,
@@ -126,9 +120,7 @@ try {
     const createMember = new CreateMember(memberRepository, membershipService);
     const updateMember = new UpdateMember(memberRepository, membershipService);
     const getMembers = new GetMembers(memberRepository);
-    const addPayment = new AddPayment(memberRepository, membershipService);
     const deleteMember = new DeleteMember(memberRepository);
-    const getStatistics = new GetStatistics(memberRepository, membershipService);
 
     // Initialize controllers
     console.log('Initializing controllers...');
@@ -136,29 +128,12 @@ try {
         createMember,
         updateMember,
         getMembers,
-        addPayment,
-        deleteMember,
-        getStatistics
+        deleteMember
     );
-    const exportController = new ExportController(getMembers, getStatistics);
 
     // Create API router
     console.log('Creating API router...');
     const apiRouter = express.Router();
-
-    // Statistics endpoint
-    console.log('Setting up statistics endpoint...');
-    apiRouter.get('/statistics', (req, res) => {
-        console.log('Statistics endpoint called');
-        memberController.getStatistics(req, res);
-    });
-
-    // Export endpoints
-    console.log('Setting up export endpoints...');
-    apiRouter.get('/export/members', (req, res) => {
-        console.log('Export members endpoint called');
-        exportController.exportMembers(req, res);
-    });
 
     // Member routes
     console.log('Setting up member routes...');
@@ -207,42 +182,6 @@ try {
         (req, res) => {
             console.log('Delete member endpoint called');
             memberController.delete(req, res);
-        }
-    );
-
-    // Add payment to member
-    memberRouter.post('/:id/payments',
-        validateParams(paramsSchema),
-        validateBody(paymentSchema),
-        (req, res) => {
-            console.log('Add payment endpoint called');
-            memberController.addPayment(req, res);
-        }
-    );
-
-    // Get payment history for member
-    memberRouter.get('/:id/payments',
-        validateParams(paramsSchema),
-        async (req, res) => {
-            console.log('Get payment history endpoint called');
-            try {
-                const member = await getMembers.getById(req.params.id);
-                res.json({
-                    success: true,
-                    data: member.paymentHistory
-                });
-            } catch (error) {
-                if (error.message === 'Member not found') {
-                    return res.status(404).json({
-                        success: false,
-                        error: error.message
-                    });
-                }
-                res.status(500).json({
-                    success: false,
-                    error: 'Failed to retrieve payment history'
-                });
-            }
         }
     );
 

@@ -4,17 +4,16 @@ class GetMembers {
     }
 
     async execute(filters = {}, page = 1, limit = 10) {
-        const members = await this.memberRepository.findAll(filters, page, limit);
-        const totalCount = await this.memberRepository.count(filters);
+        const result = await this.memberRepository.findAll(filters, page, limit);
 
         return {
-            members,
+            members: result.members,
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
-                totalCount,
-                totalPages: Math.ceil(totalCount / limit),
-                hasNext: page < Math.ceil(totalCount / limit),
+                totalCount: result.totalCount,
+                totalPages: result.totalPages,
+                hasNext: page < result.totalPages,
                 hasPrev: page > 1
             }
         };

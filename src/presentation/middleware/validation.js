@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-// Simplified member schema with only the 4 required fields
+// Simple member schema with only the 4 required fields
 const memberSchema = Joi.object({
     name: Joi.string().required().trim().min(2).max(100).messages({
         'string.empty': 'Name is required',
@@ -24,30 +24,6 @@ const memberSchema = Joi.object({
     })
 });
 
-// For backward compatibility with complex structure (in case some clients still use it)
-const complexMemberSchema = Joi.object({
-    personalInfo: Joi.object({
-        firstName: Joi.string().required().trim().min(2).max(50),
-        lastName: Joi.string().required().trim().min(2).max(50),
-        phone: Joi.string().required().trim().pattern(/^[\d\s\-\+\(\)]+$/).min(8).max(20),
-        email: Joi.string().optional().email().trim().lowercase(),
-        dateOfBirth: Joi.date().optional().max('now'),
-        gender: Joi.string().optional().valid('male', 'female'),
-        emergencyContact: Joi.object({
-            name: Joi.string().optional().trim().min(2).max(50),
-            phone: Joi.string().optional().trim().pattern(/^[\d\s\-\+\(\)]+$/).min(8).max(20)
-        }).optional()
-    }).required(),
-    membership: Joi.object({
-        joinDate: Joi.date().optional().default(new Date()),
-        totalFee: Joi.number().required().min(0),
-        paidAmount: Joi.number().optional().min(0).default(0),
-        status: Joi.string().optional().valid('active', 'inactive', 'suspended').default('active'),
-        notes: Joi.string().optional().allow('')
-    }).required(),
-    initialPaymentMethod: Joi.string().optional().valid('cash', 'card', 'transfer').default('cash')
-});
-
 const updateMemberSchema = Joi.object({
     name: Joi.string().optional().trim().min(2).max(100),
     phoneNumber: Joi.string().optional().trim().pattern(/^[\d\s\-\+\(\)]+$/).min(8).max(20),
@@ -55,18 +31,10 @@ const updateMemberSchema = Joi.object({
     paidAmount: Joi.number().optional().min(0)
 });
 
-const paymentSchema = Joi.object({
-    amount: Joi.number().required().min(0.01),
-    date: Joi.date().optional().default(new Date()),
-    method: Joi.string().required().valid('cash', 'card', 'transfer'),
-    notes: Joi.string().optional().allow('')
-});
-
 const querySchema = Joi.object({
     page: Joi.number().optional().integer().min(1).default(1),
     limit: Joi.number().optional().integer().min(1).max(100).default(10),
     search: Joi.string().optional().trim().min(1).max(50),
-    status: Joi.string().optional().valid('active', 'inactive', 'suspended', 'paid', 'unpaid', 'partial'),
     joinDateFrom: Joi.date().optional(),
     joinDateTo: Joi.date().optional()
 });
@@ -145,9 +113,7 @@ const paramsSchema = Joi.object({
 
 module.exports = {
     memberSchema,
-    complexMemberSchema,
     updateMemberSchema,
-    paymentSchema,
     querySchema,
     paramsSchema,
     validateBody,

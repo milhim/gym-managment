@@ -1,7 +1,7 @@
 {
     "name": "gym-management-backend",
     "version": "1.0.0",
-    "description": "Backend API for Gym Management System",
+    "description": "Simple Backend API for Gym Management System",
     "main": "src/server.js",
     "scripts": {
         "start": "node src/server.js",
@@ -17,8 +17,7 @@
         "joi": "^17.9.2",
         "dotenv": "^16.3.1",
         "morgan": "^1.10.0",
-        "compression": "^1.7.4",
-        "exceljs": "^4.3.0"
+        "compression": "^1.7.4"
     },
     "devDependencies": {
         "nodemon": "^3.0.1",
@@ -29,7 +28,7 @@
         "management",
         "nodejs",
         "mongodb",
-        "ddd"
+        "simple"
     ],
     "author": "Gym Management System",
     "license": "MIT"

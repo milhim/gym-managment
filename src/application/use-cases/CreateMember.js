@@ -15,9 +15,7 @@ class CreateMember {
             name: memberData.name.trim(),
             phoneNumber: memberData.phoneNumber.trim(),
             joinDate: new Date(memberData.joinDate),
-            paidAmount: memberData.paidAmount,
-            totalMembership: 100000, // Default value since it's not provided in the simple schema
-            lastPaymentDate: memberData.paidAmount > 0 ? new Date() : null
+            paidAmount: memberData.paidAmount
         });
 
         // Save member

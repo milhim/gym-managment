@@ -1,27 +1,22 @@
 # Gym Management Backend API
 
-A robust RESTful API for gym management built with Node.js, Express, and MongoDB using Domain-Driven Design (DDD) architecture.
+A simple RESTful API for gym management built with Node.js, Express, and MongoDB.
 
 ## Features
 
 - **Member Management**: Create, read, update, and delete gym members
-- **Payment Tracking**: Track member payments and payment history
-- **Statistics**: Generate comprehensive gym statistics
-- **Excel Export**: Export member data to Excel format with Arabic support
-- **Data Validation**: Comprehensive input validation using Joi
+- **Simple Structure**: Only 4 fields per member (name, phoneNumber, joinDate, paidAmount)
+- **Data Validation**: Input validation using Joi
 - **Error Handling**: Global error handling with proper HTTP status codes
-- **MongoDB Integration**: Robust database integration with Mongoose
-- **Clean Architecture**: DDD implementation with proper separation of concerns
+- **MongoDB Integration**: Database integration with Mongoose
+- **Vercel Deployment**: Ready for serverless deployment
 
 ## Architecture
-
-The project follows Domain-Driven Design (DDD) principles:
 
 ```
 src/
 ├── domain/              # Business logic and entities
-│   ├── entities/        # Domain entities (Member, Payment)
-│   ├── repositories/    # Repository interfaces
+│   ├── entities/        # Domain entities (Member)
 │   └── services/        # Domain services
 ├── application/         # Application layer
 │   ├── use-cases/       # Business use cases
@@ -31,7 +26,6 @@ src/
 │   └── repositories/    # Repository implementations
 └── presentation/        # API layer
     ├── controllers/     # HTTP controllers
-    ├── routes/          # API routes
     └── middleware/      # Express middleware
 ```
 
@@ -44,31 +38,18 @@ src/
 - `PUT /api/v1/members/:id` - Update member
 - `DELETE /api/v1/members/:id` - Delete member
 
-### Payments
-- `POST /api/v1/members/:id/payments` - Add payment to member
-- `GET /api/v1/members/:id/payments` - Get member payment history
-
-### Statistics & Export
-- `GET /api/v1/statistics` - Get gym statistics
-- `GET /api/v1/export/members` - Export members to Excel
-
 ### Health Check
 - `GET /api/v1/health` - API health check
 
 ## Installation
 
-1. **Navigate to backend directory**
-   ```bash
-   cd backend
-   ```
-
-2. **Install dependencies**
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Set up environment variables**
-   Create a `.env` file in the backend directory:
+2. **Set up environment variables**
+   Create a `.env` file:
    ```env
    NODE_ENV=development
    PORT=3000
@@ -77,7 +58,7 @@ src/
    CORS_ORIGIN=*
    ```
 
-4. **Start the server**
+3. **Start the server**
    ```bash
    # Development mode
    npm run dev
@@ -100,37 +81,10 @@ src/
 
 ```json
 {
-  "personalInfo": {
-    "firstName": "string",
-    "lastName": "string",
-    "phone": "string",
-    "email": "string (optional)",
-    "dateOfBirth": "date (optional)",
-    "gender": "male|female (optional)",
-    "emergencyContact": {
-      "name": "string (optional)",
-      "phone": "string (optional)"
-    }
-  },
-  "membership": {
-    "joinDate": "date",
-    "totalFee": "number",
-    "paidAmount": "number",
-    "status": "active|inactive|suspended",
-    "notes": "string (optional)"
-  },
-  "initialPaymentMethod": "cash|card|transfer (optional)"
-}
-```
-
-## Payment Data Structure
-
-```json
-{
-  "amount": "number",
-  "date": "date (optional)",
-  "method": "cash|card|transfer",
-  "notes": "string (optional)"
+  "name": "John Doe",
+  "phoneNumber": "1234567890",
+  "joinDate": "2023-12-01",
+  "paidAmount": 50000
 }
 ```
 
@@ -143,7 +97,6 @@ src/
 | `page` | number | Page number (default: 1) |
 | `limit` | number | Items per page (default: 10, max: 100) |
 | `search` | string | Search in name or phone |
-| `status` | string | Filter by status: active, inactive, suspended, paid, unpaid, partial |
 | `joinDateFrom` | date | Filter by join date from |
 | `joinDateTo` | date | Filter by join date to |
 
@@ -194,48 +147,32 @@ You can test the API using tools like Postman or curl:
 
 ```bash
 # Health check
-curl http://localhost:3000/api/v1/health
+curl https://your-api-url.vercel.app/api/v1/health
 
 # Get all members
-curl http://localhost:3000/api/v1/members
+curl https://your-api-url.vercel.app/api/v1/members
 
 # Create member
-curl -X POST http://localhost:3000/api/v1/members \
+curl -X POST https://your-api-url.vercel.app/api/v1/members \
   -H "Content-Type: application/json" \
   -d '{
-    "personalInfo": {
-      "firstName": "أحمد",
-      "lastName": "محمد",
-      "phone": "0123456789"
-    },
-    "membership": {
-      "totalFee": 100000,
-      "paidAmount": 50000
-    }
+    "name": "John Doe",
+    "phoneNumber": "1234567890",
+    "joinDate": "2023-12-01",
+    "paidAmount": 50000
   }'
 ```
 
-## Features in Development
+## Deployment
 
-- [ ] Member photos upload
-- [ ] Membership expiration notifications
-- [ ] Bulk member operations
-- [ ] Advanced reporting
-- [ ] Member check-in/check-out tracking
-- [ ] SMS notifications
-- [ ] Member mobile app API
+This API is ready for deployment on Vercel. See `DEPLOYMENT.md` for detailed deployment instructions.
 
 ## Dependencies
 
 - **express**: Web framework
 - **mongoose**: MongoDB ODM
 - **joi**: Data validation
-- **exceljs**: Excel file generation
 - **cors**: Cross-origin resource sharing
-- **compression**: Response compression
-- **morgan**: HTTP request logging
 - **dotenv**: Environment variable management
-
-## License
-
-This project is licensed under the MIT License. 
+- **morgan**: HTTP request logger
+- **compression**: Response compression 

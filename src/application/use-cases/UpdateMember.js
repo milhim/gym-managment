@@ -19,24 +19,13 @@ class UpdateMember {
         }
 
         // Validate name if provided
-        if (updateData.name && updateData.name.trim().length < 3) {
-            throw new Error('Name must be at least 3 characters long');
+        if (updateData.name && updateData.name.trim().length < 2) {
+            throw new Error('Name must be at least 2 characters long');
         }
 
-        // Validate amounts if provided
-        if (updateData.totalMembership !== undefined && updateData.totalMembership <= 0) {
-            throw new Error('Total membership fee must be greater than 0');
-        }
-
-        if (updateData.paidAmount !== undefined) {
-            if (updateData.paidAmount < 0) {
-                throw new Error('Paid amount cannot be negative');
-            }
-
-            const totalFee = updateData.totalMembership || member.totalMembership;
-            if (updateData.paidAmount > totalFee) {
-                throw new Error('Paid amount cannot exceed total membership fee');
-            }
+        // Validate paid amount if provided
+        if (updateData.paidAmount !== undefined && updateData.paidAmount < 0) {
+            throw new Error('Paid amount cannot be negative');
         }
 
         // Update member
