@@ -70,17 +70,145 @@ app.get('/', (req, res) => {
     });
 });
 
-// Load and setup API routes only when needed
+// Setup API routes directly (simplified for serverless)
 let routesSetup = false;
 
-function setupApiRoutes() {
+async function setupApiRoutes() {
     if (!routesSetup) {
         try {
-            const container = require('../src/infrastructure/container');
-            const createApiRoutes = require('../src/presentation/routes/apiRoutes');
+            // Import dependencies directly
+            const MongoMemberRepository = require('../src/infrastructure/repositories/MongoMemberRepository');
+            const MembershipService = require('../src/domain/services/MembershipService');
 
-            const controllers = container.getControllers();
-            app.use('/api/v1', createApiRoutes(controllers));
+            // Use Cases
+            const CreateMember = require('../src/application/use-cases/CreateMember');
+            const UpdateMember = require('../src/application/use-cases/UpdateMember');
+            const GetMembers = require('../src/application/use-cases/GetMembers');
+            const AddPayment = require('../src/application/use-cases/AddPayment');
+            const DeleteMember = require('../src/application/use-cases/DeleteMember');
+            const GetStatistics = require('../src/application/use-cases/GetStatistics');
+
+            // Controllers
+            const MemberController = require('../src/presentation/controllers/MemberController');
+            const ExportController = require('../src/presentation/controllers/ExportController');
+
+            // Validation middleware
+            const {
+                memberSchema,
+                updateMemberSchema,
+                paymentSchema,
+                querySchema,
+                paramsSchema,
+                validateBody,
+                validateQuery,
+                validateParams
+            } = require('../src/presentation/middleware/validation');
+
+            // Initialize dependencies
+            const memberRepository = new MongoMemberRepository();
+            const membershipService = new MembershipService(memberRepository);
+
+            // Initialize use cases
+            const createMember = new CreateMember(memberRepository, membershipService);
+            const updateMember = new UpdateMember(memberRepository, membershipService);
+            const getMembers = new GetMembers(memberRepository);
+            const addPayment = new AddPayment(memberRepository, membershipService);
+            const deleteMember = new DeleteMember(memberRepository);
+            const getStatistics = new GetStatistics(memberRepository, membershipService);
+
+            // Initialize controllers
+            const memberController = new MemberController(
+                createMember,
+                updateMember,
+                getMembers,
+                addPayment,
+                deleteMember,
+                getStatistics
+            );
+            const exportController = new ExportController(getMembers, getStatistics);
+
+            // API Routes
+            const router = express.Router();
+
+            // Statistics endpoint
+            router.get('/statistics', (req, res) => {
+                memberController.getStatistics(req, res);
+            });
+
+            // Export endpoints
+            router.get('/export/members', (req, res) => {
+                exportController.exportMembers(req, res);
+            });
+
+            // Member routes
+            const memberRouter = express.Router();
+
+            // Get all members with pagination and filtering
+            memberRouter.get('/',
+                validateQuery(querySchema),
+                (req, res) => memberController.getAll(req, res)
+            );
+
+            // Get member by ID
+            memberRouter.get('/:id',
+                validateParams(paramsSchema),
+                (req, res) => memberController.getById(req, res)
+            );
+
+            // Create new member
+            memberRouter.post('/',
+                validateBody(memberSchema),
+                (req, res) => memberController.create(req, res)
+            );
+
+            // Update member
+            memberRouter.put('/:id',
+                validateParams(paramsSchema),
+                validateBody(updateMemberSchema),
+                (req, res) => memberController.update(req, res)
+            );
+
+            // Delete member
+            memberRouter.delete('/:id',
+                validateParams(paramsSchema),
+                (req, res) => memberController.delete(req, res)
+            );
+
+            // Add payment to member
+            memberRouter.post('/:id/payments',
+                validateParams(paramsSchema),
+                validateBody(paymentSchema),
+                (req, res) => memberController.addPayment(req, res)
+            );
+
+            // Get payment history for member
+            memberRouter.get('/:id/payments',
+                validateParams(paramsSchema),
+                async (req, res) => {
+                    try {
+                        const member = await getMembers.getById(req.params.id);
+                        res.json({
+                            success: true,
+                            data: member.paymentHistory
+                        });
+                    } catch (error) {
+                        if (error.message === 'Member not found') {
+                            return res.status(404).json({
+                                success: false,
+                                error: error.message
+                            });
+                        }
+                        res.status(500).json({
+                            success: false,
+                            error: 'Failed to retrieve payment history'
+                        });
+                    }
+                }
+            );
+
+            // Mount routes
+            router.use('/members', memberRouter);
+            app.use('/api/v1', router);
 
             routesSetup = true;
             console.log('API routes loaded successfully');
@@ -149,7 +277,7 @@ module.exports = async (req, res) => {
         await connectToDatabase();
 
         // Setup API routes if not already done
-        setupApiRoutes();
+        await setupApiRoutes();
 
         // Handle the request
         return app(req, res);
